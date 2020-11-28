@@ -22,12 +22,7 @@ pub fn get_command(filename: &str, line_no: Option<usize>) -> Result<Option<Stri
                     t.namespace.push(tn.to_string());
                 }
                 let namespace_path = t.namespace.join("::");
-                let comm = format!(
-                    "pytest {}::{}",
-                    // fs::canonicalize(filename)?.to_string_lossy(),
-                    filename,
-                    namespace_path
-                );
+                let comm = format!("pytest {}::{}", filename, namespace_path);
                 return Ok(Some(comm));
             };
             Ok(None)
