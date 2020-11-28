@@ -1,0 +1,5 @@
+[
+  "test_stuff.py::TestClass::()::TestNestedClass::()::test_nestedclass_method",
+  "test_stuff.py::TestClass::()::test_method",
+  "test_stuff.py::test_function"
+]
