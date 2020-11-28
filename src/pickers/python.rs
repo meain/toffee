@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_python_simple_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", 16)
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(16))
             .unwrap()
             .unwrap();
         assert_eq!(
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_python_nested_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", 4)
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(4))
             .unwrap()
             .unwrap();
         assert_eq!(resp, "pytest ./fixtures/python/pytest/test_stuff.py::TestClass::TestNestedClass::test_nestedclass_method");
