@@ -1,12 +1,11 @@
 use super::base;
 
 use anyhow::Result;
-// use std::fs;
 
 fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>> {
     Ok(base::find_nearest(
         &filename,
-        r"^ *def (test_\w+)",
+        r"^\s*def (test_\w+)",
         r"^\s*class (\w+) ?.*:",
         line_no,
     )?)
