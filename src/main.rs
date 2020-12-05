@@ -13,6 +13,11 @@ struct Opts {
     // /// specify runner override default runner
     // #[argh(option, long = "runner")]
     // runner: Option<String>,
+
+    /// run full test suite
+    #[argh(switch, long = "full")]
+    full: bool,
+
     /// name of the test file
     #[argh(positional)]
     filename: String,
@@ -25,7 +30,7 @@ struct Opts {
 fn main() -> Result<()> {
     let args: Opts = argh::from_env();
 
-    let te = get_command(&args.filename, args.line_no)?;
+    let te = get_command(&args.filename, args.line_no, args.full)?;
     if let Some(t) = te {
         println!("{}", t);
     } else {

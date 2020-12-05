@@ -12,7 +12,10 @@ fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>
     )?)
 }
 
-pub fn get_command(filename: &str, line_no: Option<usize>) -> Result<Option<String>> {
+pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
+    if full {
+        return Ok(Some(format!("pytest")));
+    }
     match line_no {
         Some(ln) => {
             let mut test_case = find_nearest(&filename, ln)?;
@@ -49,7 +52,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_python_simple() {
+    fn test_simple() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 16)
             .unwrap()
             .unwrap();
@@ -60,8 +63,8 @@ mod tests {
     }
 
     #[test]
-    fn test_python_simple_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(16))
+    fn test_simple_command() {
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(16), false)
             .unwrap()
             .unwrap();
         assert_eq!(
@@ -71,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_simple_on_def() {
+    fn test_simple_on_def() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 15)
             .unwrap()
             .unwrap();
@@ -81,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_simple_on_empty() {
+    fn test_simple_on_empty() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 14)
             .unwrap()
             .unwrap();
@@ -91,7 +94,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_simple_on_class() {
+    fn test_simple_on_class() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 10)
             .unwrap()
             .unwrap();
@@ -100,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_method_obj() {
+    fn test_method_obj() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 12)
             .unwrap()
             .unwrap();
@@ -112,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_method_out_nested() {
+    fn test_method_out_nested() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 6)
             .unwrap()
             .unwrap();
@@ -125,7 +128,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_nested() {
+    fn test_nested() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 4)
             .unwrap()
             .unwrap();
@@ -142,10 +145,18 @@ mod tests {
     }
 
     #[test]
-    fn test_python_nested_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(4))
+    fn test_nested_command() {
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(4), false)
             .unwrap()
             .unwrap();
         assert_eq!(resp, "pytest ./fixtures/python/pytest/test_stuff.py::TestClass::TestNestedClass::test_nestedclass_method");
+    }
+
+    #[test]
+    fn test_full_command() {
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", None, true)
+            .unwrap()
+            .unwrap();
+        assert_eq!(resp, "pytest");
     }
 }

@@ -29,7 +29,10 @@ fn find_nearest_test_function(filename: &str, line_no: usize) -> Result<Option<b
     )?)
 }
 
-pub fn get_command(filename: &str, line_no: Option<usize>) -> Result<Option<String>> {
+pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
+    if full {
+        return Ok(Some(format!("cargo test")));
+    }
     match line_no {
         Some(ln) => {
             let test_markers = find_nearest_test_markers(&filename, ln)?;
@@ -86,7 +89,7 @@ mod tests {
 
     #[test]
     fn test_simple_command() {
-        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(16))
+        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(16), false)
             .unwrap()
             .unwrap();
         assert_eq!(resp, "cargo test pickers::tester::tests::test_simple");
@@ -94,9 +97,17 @@ mod tests {
 
     #[test]
     fn test_mod_command() {
-        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(3))
+        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(3), false)
             .unwrap()
             .unwrap();
         assert_eq!(resp, "cargo test pickers::tester::tests");
+    }
+
+    #[test]
+    fn test_full_command() {
+        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(3), true)
+            .unwrap()
+            .unwrap();
+        assert_eq!(resp, "cargo test");
     }
 }
