@@ -29,7 +29,7 @@ fn main() -> Result<()> {
     if let Some(t) = te {
         println!("{}", t);
     } else {
-        println!("Unable to pick test");
+        eprintln!("Unable to find any tests");
         exit(1);
     }
     Ok(())

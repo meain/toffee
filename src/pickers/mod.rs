@@ -9,7 +9,7 @@ pub fn get_command(filename: &str, line_no: Option<usize>) -> Result<Option<Stri
     } else if filename.ends_with(".rs") {
         rust::get_command(filename, line_no)
     } else {
-        println!("Error: Unknown filetype for file {}", filename);
+        eprintln!("Error: Unknown filetype for file {}", filename);
         Ok(None)
     }
 }
