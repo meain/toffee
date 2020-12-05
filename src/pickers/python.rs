@@ -8,6 +8,7 @@ fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>
         r"^\s*def (test_\w+)",
         r"^\s*class (\w+) ?.*:",
         line_no,
+        false,
     )?)
 }
 
@@ -16,11 +17,21 @@ pub fn get_command(filename: &str, line_no: Option<usize>) -> Result<Option<Stri
         Some(ln) => {
             let mut test_case = find_nearest(&filename, ln)?;
             if let Some(t) = test_case.as_mut() {
-                // TODO: pick runner automatically
+                let mut namespace_path = t
+                    .namespace
+                    .iter()
+                    .map(|x| x.values[1].to_string())
+                    .collect::<Vec<String>>()
+                    .join("::");
                 if let Some(tn) = t.name.as_mut() {
-                    t.namespace.push(tn.to_string());
+                    if namespace_path.len() > 2 {
+                        namespace_path =
+                            format!("{}::{}", namespace_path, tn.values[1].to_string());
+                    } else {
+                        namespace_path = format!("{}", tn.values[1].to_string());
+                    }
                 }
-                let namespace_path = t.namespace.join("::");
+                // TODO: pick runner automatically
                 let comm = format!("pytest {}::{}", filename, namespace_path);
                 return Ok(Some(comm));
             };
@@ -42,7 +53,9 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 16)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, Some("test_function".to_string()));
+
+        assert_eq!(resp.clone().name.unwrap().no, 15);
+        assert_eq!(resp.name.unwrap().values[1], "test_function".to_string());
         assert_eq!(resp.namespace.len(), 0);
     }
 
@@ -62,7 +75,8 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 15)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, Some("test_function".to_string()));
+        assert_eq!(resp.clone().name.unwrap().no, 15);
+        assert_eq!(resp.name.unwrap().values[1], "test_function".to_string());
         assert_eq!(resp.namespace.len(), 0);
     }
 
@@ -71,7 +85,8 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 14)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, Some("test_method_obj".to_string()));
+        assert_eq!(resp.clone().name.unwrap().no, 11);
+        assert_eq!(resp.name.unwrap().values[1], "test_method_obj".to_string());
         assert_eq!(resp.namespace.len(), 1);
     }
 
@@ -80,7 +95,7 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 10)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, None);
+        assert_eq!(resp.name.is_none(), true);
         assert_eq!(resp.namespace.len(), 1);
     }
 
@@ -89,10 +104,11 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 12)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, Some("test_method_obj".to_string()));
+        assert_eq!(resp.clone().name.unwrap().no, 11);
+        assert_eq!(resp.name.unwrap().values[1], "test_method_obj".to_string());
         assert_eq!(resp.namespace.len(), 1);
-        let actual_namespace: Vec<String> = vec!["TestClassObj".to_string()];
-        assert_eq!(resp.namespace, actual_namespace);
+        assert_eq!(resp.namespace[0].no, 10);
+        assert_eq!(resp.namespace[0].values[1], "TestClassObj".to_string());
     }
 
     #[test]
@@ -100,10 +116,12 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 6)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, Some("test_method".to_string()));
+        println!("{:?}", resp.clone());
+        assert_eq!(resp.clone().name.unwrap().no, 6);
+        assert_eq!(resp.name.unwrap().values[1], "test_method".to_string());
         assert_eq!(resp.namespace.len(), 1);
-        let actual_namespace: Vec<String> = vec!["TestClass".to_string()];
-        assert_eq!(resp.namespace, actual_namespace);
+        assert_eq!(resp.namespace[0].no, 1);
+        assert_eq!(resp.namespace[0].values[1], "TestClass".to_string());
     }
 
     #[test]
@@ -111,11 +129,16 @@ mod tests {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 4)
             .unwrap()
             .unwrap();
-        assert_eq!(resp.name, Some("test_nestedclass_method".to_string()));
+        assert_eq!(resp.clone().name.unwrap().no, 3);
+        assert_eq!(
+            resp.name.unwrap().values[1],
+            "test_nestedclass_method".to_string()
+        );
         assert_eq!(resp.namespace.len(), 2);
-        let actual_namespace: Vec<String> =
-            vec!["TestClass".to_string(), "TestNestedClass".to_string()];
-        assert_eq!(resp.namespace, actual_namespace);
+        assert_eq!(resp.namespace[0].no, 1);
+        assert_eq!(resp.namespace[0].values[1], "TestClass".to_string());
+        assert_eq!(resp.namespace[1].no, 2);
+        assert_eq!(resp.namespace[1].values[1], "TestNestedClass".to_string());
     }
 
     #[test]

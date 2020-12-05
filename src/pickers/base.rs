@@ -1,12 +1,49 @@
-use regex::Regex;
 use anyhow::Result;
+use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TestCase {
-    pub name: Option<String>,
-    pub namespace: Vec<String>,
+    pub name: Option<WithLineNo>,
+    pub namespace: Vec<WithLineNo>,
+}
+#[derive(Debug, Clone)]
+pub struct WithLineNo {
+    pub no: usize,
+    pub values: Vec<String>,
+}
+
+fn get_exact_line(no: usize, line_no: usize, search_downwards: bool) -> usize {
+    if search_downwards {
+        line_no + no
+    } else {
+        line_no - no
+    }
+}
+
+pub fn find_next(filename: &str, test: &str, line_no: usize) -> Result<Option<WithLineNo>> {
+    let test = Regex::new(test).unwrap();
+    let mut file = File::open(filename).expect("opening file");
+    let mut text = String::new();
+    file.read_to_string(&mut text).expect("reading file");
+    let lines: Vec<_> = text.lines().skip(line_no).collect();
+
+    for (i, line) in lines.iter().enumerate() {
+        let t_caps = test.captures(line);
+        if let Some(c) = t_caps {
+            let mut values: Vec<String> = vec![];
+            for v in c.iter() {
+                let k = v.unwrap().as_str().to_string();
+                values.push(k);
+            }
+            return Ok(Some(WithLineNo {
+                no: get_exact_line(i, line_no, true),
+                values,
+            }));
+        }
+    }
+    Ok(None)
 }
 
 pub fn find_nearest(
@@ -14,23 +51,38 @@ pub fn find_nearest(
     test: &str,
     namespace: &str,
     line_no: usize,
+    search_downwards: bool,
 ) -> Result<Option<TestCase>> {
     let test = Regex::new(test).unwrap();
     let namespace = Regex::new(namespace).unwrap();
-    let indent = Regex::new(r"^(\s+).*").unwrap(); let mut file = File::open(filename).expect("opening file");
+    let indent = Regex::new(r"^(\s+).*").unwrap();
+    let mut file = File::open(filename).expect("opening file");
     let mut text = String::new();
     file.read_to_string(&mut text).expect("reading file");
 
-    let lines: Vec<_> = text.lines().take(line_no).collect();
+    let mut lines: Vec<_> = text.lines().take(line_no).collect();
+    if !search_downwards {
+        lines = lines.into_iter().rev().collect();
+    }
 
     let mut test_item = None;
     let mut indent_level = std::usize::MAX;
-    for line in lines.iter().rev() {
+    for (i, line) in lines.iter().enumerate() {
         if test_item.is_none() {
             let t_caps = test.captures(line);
             if let Some(c) = t_caps {
+                let mut values: Vec<String> = vec![];
+                for v in c.iter() {
+                    // Fist item in this list will be the full match,
+                    // then individual capture groups
+                    let k = v.unwrap().as_str().to_string();
+                    values.push(k);
+                }
                 test_item = Some(TestCase {
-                    name: Some(c[1].to_string()),
+                    name: Some(WithLineNo {
+                        no: get_exact_line(i, line_no, search_downwards),
+                        values,
+                    }),
                     namespace: Vec::new(),
                 });
 
@@ -58,11 +110,27 @@ pub fn find_nearest(
             if i_level < indent_level {
                 indent_level = i_level;
                 if let Some(t) = test_item.as_mut() {
-                    t.namespace.push(n[1].to_string());
+                    let mut values: Vec<String> = vec![];
+                    for v in n.iter() {
+                        let k = v.unwrap().as_str().to_string();
+                        values.push(k);
+                    }
+                    t.namespace.push(WithLineNo {
+                        no: get_exact_line(i, line_no, search_downwards),
+                        values,
+                    });
                 } else {
+                    let mut values: Vec<String> = vec![];
+                    for v in n.iter() {
+                        let k = v.unwrap().as_str().to_string();
+                        values.push(k);
+                    }
                     test_item = Some(TestCase {
                         name: None,
-                        namespace: vec![n[1].to_string()],
+                        namespace: vec![WithLineNo {
+                            no: get_exact_line(i, line_no, search_downwards),
+                            values,
+                        }],
                     })
                 }
             }

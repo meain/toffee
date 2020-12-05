@@ -1,10 +1,13 @@
 mod base;
 mod python;
+mod rust;
 use anyhow::Result;
 
 pub fn get_command(filename: &str, line_no: Option<usize>) -> Result<Option<String>> {
     if filename.ends_with(".py") {
         python::get_command(filename, line_no)
+    } else if filename.ends_with(".rs") {
+        rust::get_command(filename, line_no)
     } else {
         println!("Error: Unknown filetype for file {}", filename);
         Ok(None)
