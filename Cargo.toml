@@ -1,6 +1,6 @@
 [package]
 name = "toffee"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Abin Simon <abinsimon10@gmail.com>"]
 edition = "2018"
 
