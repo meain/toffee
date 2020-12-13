@@ -11,7 +11,7 @@ meant to be used from within your editor. The ideal flow will be use
 toffee to get the command that you need to run, then use your editor
 to start a shell or something that runs the actual test.
 
-> Examle implementation for Emacs [here](https://github.com/meain/dotfiles/blob/e99f99469f92be5bb33b9cee342ca627a914b99d/emacs/.config/emacs/init.el#L941)
+> Examle implementation for Emacs [here](https://github.com/meain/dotfiles/blob/e99f99469f92be5bb33b9cee342ca627a914b99d/emacs/.config/emacs/init.el#L941-#L964)
 
 ```
 Usage: toffee <filename> [<line_no>] [--full]
