@@ -1,7 +1,8 @@
 # toffee
 
-Send in filename and position, returns the command needed to run the
-nearest test with the proper testing lib.
+Send in filename and position of any file in any language, toffee
+returns the command needed to run the nearest test with the proper
+testing lib. It is a WIP, currently supports python and rust.
 
 ## Usage
 
