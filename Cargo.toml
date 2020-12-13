@@ -3,6 +3,11 @@ name = "toffee"
 version = "0.2.0"
 authors = ["Abin Simon <abinsimon10@gmail.com>"]
 edition = "2018"
+description = "Get command to run to run specific test in a file"
+license = "Apache-2.0"
+homepage = "https://github.com/meain/toffee"
+repository = "https://github.com/meain/toffee"
+readme = "README.md"
 
 [dependencies]
 regex = "1.4.2"
