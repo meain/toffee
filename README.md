@@ -26,10 +26,10 @@ Options:
 ## Example
 
 ```shell
-$ src/pickers/rust.rs
+$ toffee src/pickers/rust.rs
 cargo test pickers::rust
 
-$ src/pickers/rust.rs 83
+$ toffee src/pickers/rust.rs 83
 cargo test pickers::rust::tests::test_simple_find
 ```
 
