@@ -20,7 +20,12 @@ mod tests {
 
     #[test]
     fn test_command_unknown() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.unknown", Some(16), false).unwrap();
+        let resp = get_command(
+            "./fixtures/python/pytest/test_stuff.unknown",
+            Some(16),
+            false,
+        )
+        .unwrap();
         assert_eq!(resp, None);
     }
 

@@ -5,7 +5,7 @@ use anyhow::Result;
 fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>> {
     Ok(base::find_nearest(
         &filename,
-        r"^\s*def (test_\w+)",
+        r"^\s*(async )?def (test_\w+)",
         r"^\s*class (\w+) ?.*:",
         line_no,
         false,
@@ -28,10 +28,13 @@ pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result
                     .join("::");
                 if let Some(tn) = t.name.as_mut() {
                     if namespace_path.len() > 2 {
-                        namespace_path =
-                            format!("{}::{}", namespace_path, tn.values[1].to_string());
+                        namespace_path = format!(
+                            "{}::{}",
+                            namespace_path,
+                            tn.values[tn.values.len() - 1].to_string()
+                        );
                     } else {
-                        namespace_path = format!("{}", tn.values[1].to_string());
+                        namespace_path = format!("{}", tn.values[tn.values.len() - 1].to_string());
                     }
                 }
                 // TODO: pick runner automatically
@@ -52,7 +55,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_simple() {
+    fn test_simple_thingy() {
         let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 16)
             .unwrap()
             .unwrap();
@@ -81,6 +84,30 @@ mod tests {
         assert_eq!(resp.clone().name.unwrap().no, 15);
         assert_eq!(resp.name.unwrap().values[1], "test_function".to_string());
         assert_eq!(resp.namespace.len(), 0);
+    }
+
+    #[test]
+    fn test_simple_on_async_def() {
+        let resp = find_nearest("./fixtures/python/pytest/test_stuff.py", 20)
+            .unwrap()
+            .unwrap();
+        assert_eq!(resp.clone().name.unwrap().no, 19);
+        assert_eq!(
+            resp.name.unwrap().values[2],
+            "test_async_function".to_string()
+        );
+        assert_eq!(resp.namespace.len(), 0);
+    }
+
+    #[test]
+    fn test_simple_async_def_command() {
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(20), false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            resp,
+            "pytest ./fixtures/python/pytest/test_stuff.py::test_async_function"
+        );
     }
 
     #[test]

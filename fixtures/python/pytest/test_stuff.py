@@ -14,3 +14,7 @@ class TestClassObj(object):
 
 def test_function():
     assert 1 == 1
+
+
+async def test_async_function():
+    assert 1 == 1

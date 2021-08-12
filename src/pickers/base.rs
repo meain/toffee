@@ -73,10 +73,9 @@ pub fn find_nearest(
             if let Some(c) = t_caps {
                 let mut values: Vec<String> = vec![];
                 for v in c.iter() {
-                    // Fist item in this list will be the full match,
-                    // then individual capture groups
-                    let k = v.unwrap().as_str().to_string();
-                    values.push(k);
+                    if let Some(k) = v {
+                        values.push(k.as_str().to_string())
+                    }
                 }
                 test_item = Some(TestCase {
                     name: Some(WithLineNo {

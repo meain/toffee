@@ -89,17 +89,25 @@ mod tests {
 
     #[test]
     fn test_simple_command() {
-        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(16), false)
-            .unwrap()
-            .unwrap();
+        let resp = get_command(
+            "./fixtures/rust/cargo/src/pickers/tester.rs",
+            Some(16),
+            false,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(resp, "cargo test pickers::tester::tests::test_simple");
     }
 
     #[test]
     fn test_mod_command() {
-        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(3), false)
-            .unwrap()
-            .unwrap();
+        let resp = get_command(
+            "./fixtures/rust/cargo/src/pickers/tester.rs",
+            Some(3),
+            false,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(resp, "cargo test pickers::tester::tests");
     }
 

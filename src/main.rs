@@ -13,7 +13,6 @@ struct Opts {
     // /// specify runner override default runner
     // #[argh(option, long = "runner")]
     // runner: Option<String>,
-
     /// run full test suite
     #[argh(switch, long = "full")]
     full: bool,
