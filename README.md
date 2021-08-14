@@ -35,6 +35,7 @@ cargo test pickers::rust::tests::test_simple_find
 
 ## Install
 
-```shell
-cargo install toffee
-```
+| OS    | From      | Command                                    |
+| ----- | --------- | ------------------------------------------ |
+| -     | crates.io | `cargo install toffee`                     |
+| macOS | homeberw  | `brew install meain/homebrew-meain/toffee` |
