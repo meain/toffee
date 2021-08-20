@@ -49,12 +49,15 @@ pub fn find_next(filename: &str, test: &str, line_no: usize) -> Result<Option<Wi
 pub fn find_nearest(
     filename: &str,
     test: &str,
-    namespace: &str,
+    namespace: Option<&str>,
     line_no: usize,
     search_downwards: bool,
 ) -> Result<Option<TestCase>> {
     let test = Regex::new(test).unwrap();
-    let namespace = Regex::new(namespace).unwrap();
+    let namespace = match namespace {
+        Some(ns) => Some(Regex::new(ns).unwrap()),
+        None => None,
+    };
     let indent = Regex::new(r"^(\s+).*").unwrap();
     let mut file = File::open(filename).expect("opening file");
     let mut text = String::new();
@@ -99,38 +102,40 @@ pub fn find_nearest(
         }
 
         // checking namespace
-        let n_caps = namespace.captures(line);
-        if let Some(n) = n_caps {
-            let i_caps = indent.captures(line);
-            let i_level = match i_caps {
-                Some(i) => i[1].len(),
-                None => 0,
-            };
-            if i_level < indent_level {
-                indent_level = i_level;
-                if let Some(t) = test_item.as_mut() {
-                    let mut values: Vec<String> = vec![];
-                    for v in n.iter() {
-                        let k = v.unwrap().as_str().to_string();
-                        values.push(k);
-                    }
-                    t.namespace.push(WithLineNo {
-                        no: get_exact_line(i, line_no, search_downwards),
-                        values,
-                    });
-                } else {
-                    let mut values: Vec<String> = vec![];
-                    for v in n.iter() {
-                        let k = v.unwrap().as_str().to_string();
-                        values.push(k);
-                    }
-                    test_item = Some(TestCase {
-                        name: None,
-                        namespace: vec![WithLineNo {
+        if let Some(ns_regex) = &namespace {
+            let n_caps = ns_regex.captures(line);
+            if let Some(n) = n_caps {
+                let i_caps = indent.captures(line);
+                let i_level = match i_caps {
+                    Some(i) => i[1].len(),
+                    None => 0,
+                };
+                if i_level < indent_level {
+                    indent_level = i_level;
+                    if let Some(t) = test_item.as_mut() {
+                        let mut values: Vec<String> = vec![];
+                        for v in n.iter() {
+                            let k = v.unwrap().as_str().to_string();
+                            values.push(k);
+                        }
+                        t.namespace.push(WithLineNo {
                             no: get_exact_line(i, line_no, search_downwards),
                             values,
-                        }],
-                    })
+                        });
+                    } else {
+                        let mut values: Vec<String> = vec![];
+                        for v in n.iter() {
+                            let k = v.unwrap().as_str().to_string();
+                            values.push(k);
+                        }
+                        test_item = Some(TestCase {
+                            name: None,
+                            namespace: vec![WithLineNo {
+                                no: get_exact_line(i, line_no, search_downwards),
+                                values,
+                            }],
+                        })
+                    }
                 }
             }
         }

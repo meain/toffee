@@ -7,7 +7,7 @@ fn find_nearest_test_markers(filename: &str, line_no: usize) -> Result<Option<ba
     Ok(base::find_nearest(
         &filename,
         r"^\s*#\[test\]",
-        r"^\s*#\[cfg\(test\)\]",
+        Some(r"^\s*#\[cfg\(test\)\]"),
         line_no,
         false,
     )?)

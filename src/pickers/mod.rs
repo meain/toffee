@@ -1,6 +1,7 @@
 mod base;
 mod python;
 mod rust;
+mod go;
 use anyhow::Result;
 
 pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
@@ -8,6 +9,8 @@ pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result
         python::get_command(filename, line_no, full)
     } else if filename.ends_with(".rs") {
         rust::get_command(filename, line_no, full)
+    } else if filename.ends_with(".go") {
+        go::get_command(filename, line_no, full)
     } else {
         eprintln!("Error: Unknown filetype for file {}", filename);
         Ok(None)

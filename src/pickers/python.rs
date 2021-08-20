@@ -6,7 +6,7 @@ fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>
     Ok(base::find_nearest(
         &filename,
         r"^\s*(async )?def (test_\w+)",
-        r"^\s*class (\w+) ?.*:",
+        Some(r"^\s*class (\w+) ?.*:"),
         line_no,
         false,
     )?)
