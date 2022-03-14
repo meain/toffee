@@ -39,3 +39,4 @@ cargo test pickers::rust::tests::test_simple_find
 | ----- | --------- | ------------------------------------------ |
 | -     | crates.io | `cargo install toffee`                     |
 | macOS | homeberw  | `brew install meain/homebrew-meain/toffee` |
+| -     | nix       | `nix-env -iA nur.repos.meain.toffee`       |
