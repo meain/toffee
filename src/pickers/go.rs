@@ -13,6 +13,7 @@ fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>
     )?)
 }
 
+// TODO: make verbose flag configurable
 pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
     if full {
         return Ok(Some(format!("go test -v ./...")));
@@ -60,11 +61,19 @@ mod tests {
     }
 
     #[test]
+    fn test_go_file_command() {
+        let resp = get_command("./fixtures/go/gotest/main_test.go", None, false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(resp, "go test -v ./fixtures/go/gotest");
+    }
+
+    #[test]
     fn test_go_simple_command() {
         let resp = get_command("./fixtures/go/gotest/main_test.go", Some(21), false)
             .unwrap()
             .unwrap();
-        assert_eq!(resp, "go test -run TestInputParseBasic");
+        assert_eq!(resp, "go test -v -run '^TestInputParseBasic$' ./fixtures/go/gotest");
     }
 
     #[test]
@@ -85,6 +94,6 @@ mod tests {
         let resp = get_command("./fixtures/go/gotest/main_test.go", None, true)
             .unwrap()
             .unwrap();
-        assert_eq!(resp, "go test");
+        assert_eq!(resp, "go test -v ./...");
     }
 }
