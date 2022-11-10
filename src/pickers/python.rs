@@ -12,9 +12,15 @@ fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>
     )?)
 }
 
-pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
+pub fn get_command(
+    filename: &str,
+    line_no: Option<usize>,
+    full: bool,
+    verbose: bool,
+) -> Result<Option<String>> {
+    let verbose_str = if verbose { " -v" } else { "" };
     if full {
-        return Ok(Some(format!("pytest")));
+        return Ok(Some(format!("pytest{}", verbose_str)));
     }
     match line_no {
         Some(ln) => {
@@ -38,7 +44,7 @@ pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result
                     }
                 }
                 // TODO: pick runner automatically
-                let comm = format!("pytest {}::{}", filename, namespace_path);
+                let comm = format!("pytest{} {}::{}", verbose_str, filename, namespace_path);
                 return Ok(Some(comm));
             };
             Ok(None)
@@ -67,9 +73,14 @@ mod tests {
 
     #[test]
     fn test_simple_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(16), false)
-            .unwrap()
-            .unwrap();
+        let resp = get_command(
+            "./fixtures/python/pytest/test_stuff.py",
+            Some(16),
+            false,
+            false,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(
             resp,
             "pytest ./fixtures/python/pytest/test_stuff.py::test_function"
@@ -101,9 +112,14 @@ mod tests {
 
     #[test]
     fn test_simple_async_def_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(20), false)
-            .unwrap()
-            .unwrap();
+        let resp = get_command(
+            "./fixtures/python/pytest/test_stuff.py",
+            Some(20),
+            false,
+            false,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(
             resp,
             "pytest ./fixtures/python/pytest/test_stuff.py::test_async_function"
@@ -172,18 +188,45 @@ mod tests {
     }
 
     #[test]
-    fn test_nested_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", Some(4), false)
-            .unwrap()
-            .unwrap();
+    fn test_nested_command_normal() {
+        let resp = get_command(
+            "./fixtures/python/pytest/test_stuff.py",
+            Some(4),
+            false,
+            false,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(resp, "pytest ./fixtures/python/pytest/test_stuff.py::TestClass::TestNestedClass::test_nestedclass_method");
     }
 
     #[test]
-    fn test_full_command() {
-        let resp = get_command("./fixtures/python/pytest/test_stuff.py", None, true)
+    fn test_full_command_normal() {
+        // (format "toffee '%s'" (string-replace default-directory "" (buffer-file-name)))
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", None, true, false)
             .unwrap()
             .unwrap();
         assert_eq!(resp, "pytest");
+    }
+
+    #[test]
+    fn test_nested_command_verbose() {
+        let resp = get_command(
+            "./fixtures/python/pytest/test_stuff.py",
+            Some(4),
+            false,
+            true,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(resp, "pytest -v ./fixtures/python/pytest/test_stuff.py::TestClass::TestNestedClass::test_nestedclass_method");
+    }
+
+    #[test]
+    fn test_full_command_verbose() {
+        let resp = get_command("./fixtures/python/pytest/test_stuff.py", None, true, true)
+            .unwrap()
+            .unwrap();
+        assert_eq!(resp, "pytest -v");
     }
 }

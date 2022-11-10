@@ -29,9 +29,15 @@ fn find_nearest_test_function(filename: &str, line_no: usize) -> Result<Option<b
     )?)
 }
 
-pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
+pub fn get_command(
+    filename: &str,
+    line_no: Option<usize>,
+    full: bool,
+    verbose: bool,
+) -> Result<Option<String>> {
+    let verbose_str = if verbose { " -v" } else { "" };
     if full {
-        return Ok(Some(format!("cargo test")));
+        return Ok(Some(format!("cargo test{}", verbose_str)));
     }
     match line_no {
         Some(ln) => {
@@ -40,7 +46,7 @@ pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result
             let file_namespace = filename.split("src/").collect::<Vec<&str>>()[1];
             let file_namespace = file_namespace.replace("/", "::").replace(".rs", "");
 
-            let mut comm = format!("cargo test {}", file_namespace);
+            let mut comm = format!("cargo test{} {}", verbose_str, file_namespace);
 
             if let Some(tm) = test_markers {
                 let ns = find_nearest_namespace(filename, tm.namespace[0].no)?;
@@ -93,6 +99,7 @@ mod tests {
             "./fixtures/rust/cargo/src/pickers/tester.rs",
             Some(16),
             false,
+            false,
         )
         .unwrap()
         .unwrap();
@@ -100,10 +107,11 @@ mod tests {
     }
 
     #[test]
-    fn test_mod_command() {
+    fn test_mod_command_normal() {
         let resp = get_command(
             "./fixtures/rust/cargo/src/pickers/tester.rs",
             Some(3),
+            false,
             false,
         )
         .unwrap()
@@ -112,10 +120,41 @@ mod tests {
     }
 
     #[test]
-    fn test_full_command() {
-        let resp = get_command("./fixtures/rust/cargo/src/pickers/tester.rs", Some(3), true)
-            .unwrap()
-            .unwrap();
+    fn test_full_command_normal() {
+        let resp = get_command(
+            "./fixtures/rust/cargo/src/pickers/tester.rs",
+            Some(3),
+            true,
+            false,
+        )
+        .unwrap()
+        .unwrap();
         assert_eq!(resp, "cargo test");
+    }
+
+    #[test]
+    fn test_mod_command_verbose() {
+        let resp = get_command(
+            "./fixtures/rust/cargo/src/pickers/tester.rs",
+            Some(3),
+            false,
+            true,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(resp, "cargo test -v pickers::tester::tests");
+    }
+
+    #[test]
+    fn test_full_command_verbose() {
+        let resp = get_command(
+            "./fixtures/rust/cargo/src/pickers/tester.rs",
+            Some(3),
+            true,
+            true,
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(resp, "cargo test -v");
     }
 }
