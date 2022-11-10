@@ -10,6 +10,6 @@ repository = "https://github.com/meain/toffee"
 readme = "README.md"
 
 [dependencies]
-regex = "1.4.2"
+regex = "1.5.5"
 anyhow = "1.0.34"
 argh = "0.1.4"
