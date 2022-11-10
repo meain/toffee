@@ -17,6 +17,11 @@ struct Opts {
     #[argh(switch, long = "full")]
     full: bool,
 
+    // TODO; handle things like `-vv` for increased verbosity
+    /// enable verbose flag
+    #[argh(switch, long = "verbose")]
+    verbose: bool,
+
     /// name of the test file
     #[argh(positional)]
     filename: String,
@@ -29,7 +34,7 @@ struct Opts {
 fn main() -> Result<()> {
     let args: Opts = argh::from_env();
 
-    let te = get_command(&args.filename, args.line_no, args.full)?;
+    let te = get_command(&args.filename, args.line_no, args.full, args.verbose)?;
     if let Some(t) = te {
         println!("{}", t);
     } else {

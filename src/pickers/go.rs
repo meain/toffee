@@ -14,9 +14,15 @@ fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>
 }
 
 // TODO: make verbose flag configurable
-pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result<Option<String>> {
+pub fn get_command(
+    filename: &str,
+    line_no: Option<usize>,
+    full: bool,
+    verbose: bool,
+) -> Result<Option<String>> {
+    let verbose_str = if verbose { " -v" } else { "" };
     if full {
-        return Ok(Some(format!("go test -v ./...")));
+        return Ok(Some(format!("go test{} ./...", verbose_str)));
     }
     let module_path = match Path::new(&filename).parent().ok_or_else(|| ".") {
         Ok(m) => m.to_string_lossy().to_string(),
@@ -30,7 +36,10 @@ pub fn get_command(filename: &str, line_no: Option<usize>, full: bool) -> Result
                 if let Some(tn) = t.name.as_mut() {
                     namespace_path = format!("{}", tn.values[tn.values.len() - 1].to_string());
                 }
-                let comm = format!("go test -v -run '^{}$' {}", namespace_path, module_path);
+                let comm = format!(
+                    "go test{} -run '^{}$' {}",
+                    verbose_str, namespace_path, module_path
+                );
                 return Ok(Some(comm));
             };
             Ok(None)
@@ -62,18 +71,10 @@ mod tests {
 
     #[test]
     fn test_go_file_command() {
-        let resp = get_command("./fixtures/go/gotest/main_test.go", None, false)
+        let resp = get_command("./fixtures/go/gotest/main_test.go", None, false, false)
             .unwrap()
             .unwrap();
         assert_eq!(resp, "go test -v ./fixtures/go/gotest");
-    }
-
-    #[test]
-    fn test_go_simple_command() {
-        let resp = get_command("./fixtures/go/gotest/main_test.go", Some(21), false)
-            .unwrap()
-            .unwrap();
-        assert_eq!(resp, "go test -v -run '^TestInputParseBasic$' ./fixtures/go/gotest");
     }
 
     #[test]
@@ -90,8 +91,38 @@ mod tests {
     }
 
     #[test]
-    fn test_go_full_command() {
-        let resp = get_command("./fixtures/go/gotest/main_test.go", None, true)
+    fn test_go_simple_command_normal() {
+        let resp = get_command("./fixtures/go/gotest/main_test.go", Some(21), false, false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            resp,
+            "go test -run '^TestInputParseBasic$' ./fixtures/go/gotest"
+        );
+    }
+
+    #[test]
+    fn test_go_full_command_normal() {
+        let resp = get_command("./fixtures/go/gotest/main_test.go", None, true, false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(resp, "go test ./...");
+    }
+
+    #[test]
+    fn test_go_simple_command_verbose() {
+        let resp = get_command("./fixtures/go/gotest/main_test.go", Some(21), false, true)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            resp,
+            "go test -v -run '^TestInputParseBasic$' ./fixtures/go/gotest"
+        );
+    }
+
+    #[test]
+    fn test_go_full_command_verbose() {
+        let resp = get_command("./fixtures/go/gotest/main_test.go", None, true, true)
             .unwrap()
             .unwrap();
         assert_eq!(resp, "go test -v ./...");
