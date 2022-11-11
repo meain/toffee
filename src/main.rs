@@ -19,7 +19,7 @@ struct Opts {
 
     // TODO; handle things like `-vv` for increased verbosity
     /// enable verbose flag
-    #[argh(switch, long = "verbose")]
+    #[argh(switch, long = "verbose", short='v')]
     verbose: bool,
 
     /// name of the test file
