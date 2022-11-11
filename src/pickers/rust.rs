@@ -50,13 +50,15 @@ pub fn get_command(
     } else {
         filename.to_string()
     };
+    let file_namespace = if let Some(rfs) = relative_filename.split_once("src/") {
+        rfs.1
+    } else {
+        relative_filename
+    };
+    let file_namespace = file_namespace.replace("/", "::").replace(".rs", "");
     match line_no {
         Some(ln) => {
             let test_markers = find_nearest_test_markers(&filename, ln)?;
-
-            let file_namespace = relative_filename.split("src/").collect::<Vec<&str>>()[1];
-            let file_namespace = file_namespace.replace("/", "::").replace(".rs", "");
-
             let mut comm = format!("cargo test{} {}", verbose_str, file_namespace);
 
             if let Some(tm) = test_markers {
@@ -80,8 +82,6 @@ pub fn get_command(
             return Ok(Some(comm));
         }
         None => {
-            let file_namespace = relative_filename.split("src/").collect::<Vec<&str>>()[1];
-            let file_namespace = file_namespace.replace("/", "::").replace(".rs", "");
             let comm = format!("cargo test {}", file_namespace);
             return Ok(Some(comm));
         }
