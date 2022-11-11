@@ -39,11 +39,22 @@ pub fn get_command(
     if full {
         return Ok(Some(format!("cargo test{}", verbose_str)));
     }
+
+    // ran into an issue where we had path like
+    // /home/meain/dev/src/project/src/blah/blah which caused issues
+    // in the 'src/' split a few lines below
+    let root = base::get_project_root(filename, "Cargo.toml");
+    let relative_filename = &if filename.starts_with(root) {
+        root.to_string().push_str("/");
+        filename.replacen(root, "", 1)
+    } else {
+        filename.to_string()
+    };
     match line_no {
         Some(ln) => {
             let test_markers = find_nearest_test_markers(&filename, ln)?;
 
-            let file_namespace = filename.split("src/").collect::<Vec<&str>>()[1];
+            let file_namespace = relative_filename.split("src/").collect::<Vec<&str>>()[1];
             let file_namespace = file_namespace.replace("/", "::").replace(".rs", "");
 
             let mut comm = format!("cargo test{} {}", verbose_str, file_namespace);
@@ -69,7 +80,7 @@ pub fn get_command(
             return Ok(Some(comm));
         }
         None => {
-            let file_namespace = filename.split("src/").collect::<Vec<&str>>()[1];
+            let file_namespace = relative_filename.split("src/").collect::<Vec<&str>>()[1];
             let file_namespace = file_namespace.replace("/", "::").replace(".rs", "");
             let comm = format!("cargo test {}", file_namespace);
             return Ok(Some(comm));

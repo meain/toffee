@@ -2,6 +2,7 @@ use anyhow::Result;
 use regex::Regex;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct TestCase {
@@ -149,4 +150,23 @@ pub fn find_nearest(
         t.namespace = t.namespace.clone().into_iter().rev().collect();
     }
     Ok(test_item)
+}
+
+pub fn get_project_root<'a>(filename: &'a str, marker: &'a str) -> &'a str {
+    let mut root = Path::new(filename.clone());
+    // in case we are already at root
+    if root.join(marker).exists() {
+        return root.to_str().unwrap();
+    }
+    loop {
+        match root.parent() {
+            Some(p) => {
+                if p.join(marker).exists() {
+                    return p.to_str().unwrap();
+                }
+                root = p
+            }
+            None => return root.to_str().unwrap(),
+        }
+    }
 }
