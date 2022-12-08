@@ -6,7 +6,7 @@ use std::path::Path;
 fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>> {
     Ok(base::find_nearest(
         &filename,
-        r"^\s*func (Test\w+)",
+        r"^\s*func (Test\w+|Example\w+)",
         None,
         line_no,
         false,
