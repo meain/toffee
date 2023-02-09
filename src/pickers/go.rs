@@ -6,7 +6,7 @@ use std::path::Path;
 fn find_nearest(filename: &str, line_no: usize) -> Result<Option<base::TestCase>> {
     Ok(base::find_nearest(
         &filename,
-        r"^\s*func (Test\w+|Example\w+)",
+        r"^\s*func\s*\(?([^\)]*)\)?\s+(Test\w+|Example\w+)",
         None,
         line_no,
         false,
@@ -34,7 +34,18 @@ pub fn get_command(
             if let Some(t) = test_case.as_mut() {
                 let mut namespace_path = format!("");
                 if let Some(tn) = t.name.as_mut() {
-                    namespace_path = format!("{}", tn.values[tn.values.len() - 1].to_string());
+                    // FIXME(meain): This is super hacky
+                    // https://github.com/stretchr/testify#suite-package
+                    let mut suite = tn.values[tn.values.len() - 2].to_string();
+                    if suite.len() != 0 {
+                        suite = suite.split(" ").collect::<Vec<&str>>()[1]
+                            .strip_prefix("*")
+                            .unwrap()
+                            .to_string();
+                        suite = "Test".to_string() + suite.as_str() + "/"
+                    }
+                    namespace_path =
+                        format!("{}{}", suite, tn.values[tn.values.len() - 1].to_string());
                 }
                 let comm = format!(
                     "go test{} -run '^{}$' {}",
@@ -63,9 +74,24 @@ mod tests {
 
         assert_eq!(resp.clone().name.unwrap().no, 8);
         assert_eq!(
-            resp.name.unwrap().values[1],
+            resp.name.unwrap().values[2],
             "TestInputParseBasic".to_string()
         );
+        assert_eq!(resp.namespace.len(), 0);
+    }
+
+    #[test]
+    fn test_go_suite() {
+        let resp = find_nearest("./fixtures/go/gotest/main_test.go", 32)
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(resp.clone().name.unwrap().no, 31);
+        assert_eq!(
+            resp.name.as_ref().unwrap().values[2],
+            "TestNewThing".to_string()
+        );
+        assert_eq!(resp.name.unwrap().values[1], "suite *TestSuite".to_string());
         assert_eq!(resp.namespace.len(), 0);
     }
 
@@ -84,7 +110,7 @@ mod tests {
             .unwrap();
         assert_eq!(resp.clone().name.unwrap().no, 8);
         assert_eq!(
-            resp.name.unwrap().values[1],
+            resp.name.unwrap().values[2],
             "TestInputParseBasic".to_string()
         );
         assert_eq!(resp.namespace.len(), 0);
@@ -126,5 +152,16 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(resp, "go test -v ./...");
+    }
+
+    #[test]
+    fn test_go_suite_command_normal() {
+        let resp = get_command("./fixtures/go/gotest/main_test.go", Some(32), false, false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            resp,
+            "go test -run '^TestSuite/TestNewThing$' ./fixtures/go/gotest"
+        );
     }
 }

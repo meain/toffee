@@ -26,3 +26,8 @@ func TestInputParseBasic(t *testing.T) {
 		})
 	}
 }
+
+
+func (suite *TestSuite) TestNewThing(){
+	// blah blah blah
+}
